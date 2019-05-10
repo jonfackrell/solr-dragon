@@ -20,9 +20,33 @@ class Module extends AbstractModule
      * @param ViewModel $view
      * @return string
      */
-    public function getConfigForm(PhpRenderer $renderer)
+    public function getConfigForm(PhpRenderer $view)
     {
-        return '';
+        $extractors = $this->getServiceLocator()->get('SolrDragon\ExtractorManager');
+        $html = '
+        <table class="tablesaw tablesaw-stack">
+            <thead>
+            <tr>
+                <th>' . $view->translate('Extractor') . '</th>
+                <th>' . $view->translate('Available') . '</th>
+            </tr>
+            </thead>
+            <tbody>';
+            $extractor = $extractors->get('pdftotext');
+            $isAvailable = $extractor->isAvailable()
+                ? sprintf('<span style="color: green;">%s</span>', $view->translate('Yes'))
+                : sprintf('<span style="color: red;">%s</span>', $view->translate('No'));
+            $html .= sprintf('
+        <tr>
+            <td>%s</td>
+            <td>%s</td>
+        </tr>', 'pdftotext', $isAvailable);
+
+
+        $html .= '
+            </tbody>
+        </table>';
+        return $html;
     }
 
     /**

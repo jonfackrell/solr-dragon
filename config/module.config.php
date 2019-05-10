@@ -1,10 +1,22 @@
 <?php
-namespace SolrDragon;
 
 return [
+    'service_manager' => [
+        'factories' => [
+            'SolrDragon\ExtractorManager' => SolrDragon\Service\Extractor\ManagerFactory::class,
+        ],
+    ],
+    'extract_text_extractors' => [
+        'factories' => [
+            'pdftotext' => SolrDragon\Service\Extractor\PdftotextFactory::class,
+        ],
+        'aliases' => [
+            'application/pdf' => 'pdftotext',
+        ],
+    ],
     'controllers' => [
         'factories' => [
-            'SolrDragon\Controller\Index' => Service\Controller\IndexControllerFactory::class,
+            'SolrDragon\Controller\Index' => SolrDragon\Service\Controller\IndexControllerFactory::class,
         ],
     ],
     'router' => [
