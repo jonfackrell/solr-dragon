@@ -11,14 +11,46 @@ if ($creator) {
     $title .= ' - ' . $creator;
 }
 
+$medias = $resource->media();
 
+$script = <<<JS
+$(function(){
+    var viewer = OpenSeadragon({
+            id: "openseadragon1",
+            prefixUrl: "/modules/SolrDragon/asset/vendor/solrdragon/images/",
+            tileSources: {
+                type: 'image',
+                url:  'http://omeka.local/files/original/67997889f2c3fa467e2d9695fd10dd0ea130d70f.jpg',
+            }
+        });
+
+});
+JS;
+$this->headScript()->appendScript($script);
+/*echo $medias[0]->thumbnailUrl('medium');*/
 ?>
 
     <div class="min-h-screen md:flex">
         <div class="flex-none w-full md:max-w-xs ">
             <?php echo $this->pageTitle($title); ?>
+
+            <?php foreach($medias as $media){ ?>
+
+                <div class="max-w-md w-full lg:flex">
+                    <div class="h-32 lg:h-auto lg:w-32 flex-none bg-cover rounded-t lg:rounded-t-none lg:rounded-l text-center overflow-hidden" style="background-image: url('<?php echo $media->thumbnailUrl('medium'); ?>')" title="...">
+                    </div>
+                    <div class="border-r border-b border-l border-grey-light lg:border-l-0 lg:border-t lg:border-grey-light bg-white rounded-b lg:rounded-b-none lg:rounded-r p-4 flex flex-col justify-between leading-normal">
+                        <div class="mb-8">
+                            <div class="text-black font-bold text-xl mb-2"><?php echo $media->displayTitle(); ?></div>
+                            <p class="text-grey-darker text-base"><?php echo $media->displayValues(); ?></p>
+                        </div>
+                    </div>
+                </div>
+
+            <?php } ?>
         </div>
         <div class="flex-1">
+            <div id="openseadragon1" style="width: 1004px; height: 800px;"></div>
             <?php echo $this->solrDragon($resource); ?>
         </div>
     </div>
