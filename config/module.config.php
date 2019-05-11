@@ -11,6 +11,11 @@ return [
             'solrDragon' => SolrDragon\Service\ViewHelper\SolrDragonFactory::class,
         ],
     ],
+    'form_elements' => [
+        'factories' => [
+            SolrDragon\Form\ConfigForm::class => SolrDragon\Service\Form\ConfigFormFactory::class,
+        ],
+    ],
     'service_manager' => [
         'factories' => [
             'SolrDragon\ExtractorManager' => SolrDragon\Service\Extractor\ManagerFactory::class,
@@ -82,6 +87,13 @@ return [
                     ],
                 ],
             ],
+        ],
+    ],
+    'solrdragon' => [
+        'config' => [
+            'solrdragon_solr_server_url' => '',
+            'solrdragon_solr_server_username' => '',
+            'solrdragon_solr_server_password' => '',
         ],
     ],
 ];
