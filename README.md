@@ -23,4 +23,7 @@ Once installed and active, this module has the following features:
 ### pdftotext
 
 Used to extract text from PDF files. Requires [pdftotext](https://linux.die.net/man/1/pdftotext),
-a part of the poppler-utils package.
+a part of the poppler-utils package. To install, run the the following commands:
+
+    sudo apt-get update
+    sudo apt-get install python-poppler

@@ -11,6 +11,15 @@ if ($creator) {
     $title .= ' - ' . $creator;
 }
 
-echo $this->pageTitle($title);
+
 ?>
-<?php echo $this->solrDragon($resource);
+
+    <div class="min-h-screen md:flex">
+        <div class="flex-none w-full md:max-w-xs ">
+            <?php echo $this->pageTitle($title); ?>
+        </div>
+        <div class="flex-1">
+            <?php echo $this->solrDragon($resource); ?>
+        </div>
+    </div>
+
