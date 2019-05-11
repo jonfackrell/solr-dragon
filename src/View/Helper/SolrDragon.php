@@ -157,6 +157,11 @@ class SolrDragon extends AbstractHelper
         $view = $this->view;
 
         $view->headLink()
+            ->prependStylesheet($view->assetUrl('css/tailwind.min.css', 'SolrDragon'));
+        $view->headScript()
+            ->appendFile($view->assetUrl('vendor/solrdragon/js/openseadragon.min.js', 'SolrDragon'));
+
+        $view->headLink()
             ->prependStylesheet($view->assetUrl('vendor/uv/uv.css', 'UniversalViewer'))
             ->prependStylesheet($view->assetUrl('css/universal-viewer.css', 'UniversalViewer'));
         $view->headScript()
