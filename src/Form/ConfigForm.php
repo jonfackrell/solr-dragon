@@ -61,6 +61,27 @@ class ConfigForm extends Form implements TranslatorAwareInterface
             ],
         ]);
 
+        $this->add([
+            'name' => 'solrdragon_google_vision',
+            'type' => Fieldset::class,
+            'options' => [
+                'label' => 'Google Vision API Configuration',
+            ],
+        ]);
+        $googleVisionFieldset = $this->get('solrdragon_google_vision');
+
+        $this->add([
+            'name' => 'solrdragon_google_cloud_key',
+            'type' => Element\Text::class,
+            'options' => [
+                'label' => 'Google Cloud Key', // @translate
+                'info' => $this->translate('This is your Google API key with access to the Google Vision Cloud API'), // @translate
+            ],
+            'attributes' => [
+                'id' => 'solrdragon_google_cloud_key',
+            ],
+        ]);
+
     }
 
     protected function translate($args)

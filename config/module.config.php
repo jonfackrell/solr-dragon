@@ -94,6 +94,7 @@ return [
             'solrdragon_solr_server_url' => '',
             'solrdragon_solr_server_username' => '',
             'solrdragon_solr_server_password' => '',
+            'solrdragon_google_cloud_key' => '',
         ],
     ],
 ];
