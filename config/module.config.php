@@ -58,18 +58,37 @@ return [
             'solrdragon_viewer' => [
                 'type' => 'segment',
                 'options' => [
-                    'route' => '/:resourcename/:id/solrdragon',
+                    'route' => '/s/:site-slug/:resourcename/:id/solrdragon',
                     'constraints' => [
                         'resourcename' => 'item|item\-set',
                         'id' => '\d+',
                     ],
                     'defaults' => [
                         '__NAMESPACE__' => 'SolrDragon\Controller',
+                        '__SITE__' => true,
                         'controller' => 'Viewer',
                         'action' => 'show',
                     ],
                 ],
             ],
+            'site' => [
+                'child_routes' => [
+                    'resource-id' => [
+                        'type' => \Zend\Router\Http\Segment::class,
+                        'options' => [
+                            'route' => '/:controller/:id[/:action]/solrdragon',
+                            'defaults' => [
+                                'action' => 'show',
+                            ],
+                            'constraints' => [
+                                'controller' => '[a-zA-Z][a-zA-Z0-9_-]*',
+                                'action' => '[a-zA-Z][a-zA-Z0-9_-]*',
+                                'id' => '\d+',
+                            ],
+                        ],
+                    ],
+                ]
+            ]
         ],
     ],
     'navigation' => [

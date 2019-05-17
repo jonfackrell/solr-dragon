@@ -29,7 +29,7 @@ class Pdftotext implements ExtractorInterface
         if (false === $commandPath) {
             return false;
         }
-        $commandArgs = [$commandPath, '-enc UTF-8'];
+        $commandArgs = [$commandPath, '-layout', '-enc UTF-8'];
         if (isset($options['f'])) {
             $commandArgs[] = sprintf('-f %s', escapeshellarg($options['f']));
         }

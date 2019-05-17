@@ -158,8 +158,16 @@ class SolrDragon extends AbstractHelper
 
         $view->headLink()
             ->prependStylesheet($view->assetUrl('css/tailwind.min.css', 'SolrDragon'));
+
+        $view->headLink()
+            ->prependStylesheet($view->assetUrl('css/solrdragon.css', 'SolrDragon'));
         $view->headScript()
             ->prependFile($view->assetUrl('vendor/solrdragon/js/openseadragon.min.js', 'SolrDragon'));
+
+        $view->headLink()
+            ->prependStylesheet($view->assetUrl('vendor/zino-ui/themes/silver/zino.splitter.css', 'SolrDragon'));
+        $view->headScript()
+            ->prependFile($view->assetUrl('vendor/zino-ui/zino-1.5.custom.min.js', 'SolrDragon'));
 
         $view->headLink()
             ->prependStylesheet($view->assetUrl('vendor/uv/uv.css', 'UniversalViewer'))

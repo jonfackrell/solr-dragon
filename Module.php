@@ -1,8 +1,12 @@
 <?php
 namespace SolrDragon;
 
+use Omeka\Stdlib\Cli;
 use SolrDragon\Form\ConfigForm;
 use Omeka\Module\AbstractModule;
+use Zend\EventManager\Event;
+use Zend\EventManager\SharedEventManagerInterface;
+use Zend\ServiceManager\Exception\ServiceNotFoundException;
 use Zend\View\Model\ViewModel;
 use Zend\Mvc\Controller\AbstractController;
 use Zend\View\Renderer\PhpRenderer;
@@ -137,6 +141,76 @@ class Module extends AbstractModule
             $data[$name] = $val;
         }
         return $data;
+    }
+
+
+    public function attachListeners(SharedEventManagerInterface $sharedEventManager)
+    {
+        /**
+         * Before ingesting a media file, extract its text and set it to the
+         * media. This will only happen when creating the media.
+         */
+        $sharedEventManager->attach(
+            '*',
+            'media.ingest_file.pre',
+            function (Event $event) {
+
+                // Get module settings
+
+
+                switch ('pdftotext') {
+                    case 'pdftotext':
+                        $tempFile = $event->getParam('tempFile');
+                        $coordinates = $this->extractText($tempFile->getTempPath(), $tempFile->getMediaType());
+                        $logger = $this->getServiceLocator()->get('Omeka\Logger');
+                        $logger->info($coordinates);
+                        // Process XML
+                        break;
+                    case 'google':
+                        // Process JSON
+                        break;
+                }
+
+                $this->storeLocally($coordinates);
+                if($solrIsEnabled)
+                    $this->storeSolr();
+
+            }
+        );
+
+    }
+
+    /**
+     * Extract text from a file.
+     *
+     * @param string $filePath
+     * @param string $mediaType
+     * @param array $options
+     * @return string|false
+     */
+    public function extractText($filePath, $mediaType = null, array $options = [])
+    {
+        if (!@is_file($filePath)) {
+            // The file doesn't exist.
+            return false;
+        }
+        if (null === $mediaType) {
+            // Fall back on PHP's magic.mime file.
+            $mediaType = mime_content_type($filePath);
+        }
+        $extractors = $this->getServiceLocator()->get('SolrDragon\ExtractorManager');
+        try {
+            $extractor = $extractors->get($mediaType);
+        } catch (ServiceNotFoundException $e) {
+            // No extractor assigned to the media type.
+            return false;
+        }
+        if (!$extractor->isAvailable()) {
+            // The extractor is unavailable.
+            return false;
+        }
+        // extract() should return false if it cannot extract text.
+        return $extractor->extract($filePath, $options);
     }
 
 
