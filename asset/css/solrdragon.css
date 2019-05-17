@@ -1,0 +1,28 @@
+#content{
+    padding: 10px;
+    max-width: 100%;
+}
+
+#toolbar-container{
+    background-color: #ffffff;
+}
+
+#toolbar-container img{
+    padding: 4px 0px !important;
+}
+
+.media-title{
+    word-break: break-word;
+}
+
+.navigation-buttons{
+    margin-left: 300px;
+}
+
+#next{
+
+}
+
+#previous{
+
+}

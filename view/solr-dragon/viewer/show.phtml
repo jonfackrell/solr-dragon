@@ -13,35 +13,113 @@ if ($creator) {
 
 $medias = $resource->media();
 
-$script = <<<JS
-$(function(){
-    var viewer = OpenSeadragon({
+/*var_dump($medias[0]->originalUrl());
+die();*/
+$images = [];
+foreach($medias as $media){
+    $images[] = [
+                    'type' => 'legacy-image-pyramid',
+                    'levels' => [
+                        [
+                            'url' =>  $media->originalUrl(),
+                            'height' => 2000,
+                            'width' =>  2000
+                        ]
+                    ],
+                ];
+}
+?>
+<script>
+    $(function(){
+        var viewer = OpenSeadragon({
             id: "openseadragon1",
             prefixUrl: "/modules/SolrDragon/asset/vendor/solrdragon/images/",
-            tileSources: {
-                type: 'image',
-                url:  'http://omeka.local/files/original/67997889f2c3fa467e2d9695fd10dd0ea130d70f.jpg',
+            toolbar: "toolbar-container",
+            tileSources: <?php echo json_encode($images); ?>,
+            nextButton:     "next",
+            previousButton: "previous",
+            showNavigator:  true,
+            sequenceMode: true,
+            degrees:       90,
+            showRotationControl: true,
+            showFlipControl: true,
+            showReferenceStrip: true,
+            gestureSettingsTouch: {
+                pinchRotate: true
             }
         });
 
-});
-JS;
-$this->headScript()->appendScript($script);
-/*echo $medias[0]->thumbnailUrl('medium');*/
-?>
+        let printButton = new OpenSeadragon.Button({
+            tooltip: 'Print',
+            srcRest: `/modules/SolrDragon/asset/vendor/solrdragon/images/button_grouphover.png`,
+            srcGroup: `/modules/SolrDragon/asset/vendor/solrdragon/images/button_grouphover.png`,
+            srcHover: `/modules/SolrDragon/asset/vendor/solrdragon/images/button_grouphover.png`,
+            srcDown: `/modules/SolrDragon/asset/vendor/solrdragon/images/button_grouphover.png`,
+            onClick: function(data){
+                console.log(data);
+                window.print();
+            }
+        });
+
+        viewer.buttons.buttons.push(printButton);
+        viewer.buttons.element.appendChild(printButton.element);
+
+
+
+        /*viewer.addHandler('open', () => {
+            let printButton = new OpenSeadragon.Button({
+                tooltip: 'Print',
+                srcRest: `/modules/SolrDragon/asset/vendor/solrdragon/images/button_grouphover.png`,
+                srcGroup: `/modules/SolrDragon/asset/vendor/solrdragon/images/button_grouphover.png`,
+                srcHover: `/modules/SolrDragon/asset/vendor/solrdragon/images/button_grouphover.png`,
+                srcDown: `/modules/SolrDragon/asset/vendor/solrdragon/images/button_grouphover.png`,
+                onClick: function(data){
+                    console.log(data);
+                    window.print();
+                }
+            });
+
+            viewer.buttons.buttons.push(printButton);
+            viewer.buttons.element.appendChild(printButton.element);
+            //viewer.addControl(printButton.element, { anchor: OpenSeadragon.ControlAnchor.TOP_LEFT });
+        });*/
+
+
+        viewer.addHandler("previous", function (data) {
+            console.log(data);
+        });
+
+        viewer.addHandler("next", function (data) {
+            console.log(data);
+        });
+
+        $(document).on('click', '.media', function(){
+            var $media = $(this);
+            viewer.open({
+                type: 'image',
+                url: $media.data('image')
+            });
+        });
+    });
+</script>
+
+
+
 
     <div class="min-h-screen md:flex">
-        <div class="flex-none w-full md:max-w-xs ">
+        <div class="flex-none w-full md:max-w-md ">
             <?php echo $this->pageTitle($title); ?>
 
             <?php foreach($medias as $media){ ?>
 
-                <div class="max-w-md w-full lg:flex">
-                    <div class="h-32 lg:h-auto lg:w-32 flex-none bg-cover rounded-t lg:rounded-t-none lg:rounded-l text-center overflow-hidden" style="background-image: url('<?php echo $media->thumbnailUrl('medium'); ?>')" title="...">
+                <div class="media max-w-sm w-full lg:flex" data-image="<?php echo $media->originalUrl(); ?>">
+                    <div class="h-32 lg:h-auto lg:w-32 flex-none bg-cover rounded-t lg:rounded-t-none lg:rounded-l text-center overflow-hidden"
+                         style="background-image: url('<?php echo $media->thumbnailUrl('medium'); ?>')"
+                         title="...">
                     </div>
                     <div class="border-r border-b border-l border-grey-light lg:border-l-0 lg:border-t lg:border-grey-light bg-white rounded-b lg:rounded-b-none lg:rounded-r p-4 flex flex-col justify-between leading-normal">
                         <div class="mb-8">
-                            <div class="text-black font-bold text-xl mb-2"><?php echo $media->displayTitle(); ?></div>
+                            <div class="media-title text-black font-bold text-xl mb-2"><?php echo $media->displayTitle(); ?></div>
                             <p class="text-grey-darker text-base"><?php echo $media->displayValues(); ?></p>
                         </div>
                     </div>
@@ -50,7 +128,15 @@ $this->headScript()->appendScript($script);
             <?php } ?>
         </div>
         <div class="flex-1">
-            <div id="openseadragon1" style="width: 1004px; height: 800px;"></div>
+            <div id="toolbar-container" style="width: 100%; height: 40px;">
+                <div class="navigation-buttons">
+                    <span id="previous">Previous</span>
+                    <span id="next">Next</span>
+                </div>
+            </div>
+            <div>
+                <div id="openseadragon1" style="width: 100%; height: 800px;"></div>
+            </div>
             <?php echo $this->solrDragon($resource); ?>
         </div>
     </div>
