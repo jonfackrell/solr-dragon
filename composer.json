@@ -1,0 +1,8 @@
+{
+    "name": "vagrant/solr-dragon",
+    "require-dev": {
+        "solarium/solarium": "^5.0"
+    },
+    "license": "MIT",
+    "require": {}
+}

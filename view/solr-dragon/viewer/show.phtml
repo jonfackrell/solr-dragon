@@ -104,11 +104,28 @@ foreach($medias as $media){
 </script>
 
 
-
+<?php echo $this->pageTitle($title); ?>
 
     <div class="min-h-screen md:flex">
-        <div class="flex-none w-full md:max-w-md ">
-            <?php echo $this->pageTitle($title); ?>
+        <div class="flex-none w-full md:max-w-md overflow-y-scroll">
+
+            <div class="w-full">
+                <div class="flex">
+                    <div class="container bg-white">
+                        <div class="px-2 py-2">
+                            <div class="text-center">
+                                <div class="w-full text-center">
+                                    <form action="#">
+                                        <div class="mx-auto p-1 pr-0 flex items-center">
+                                            <input type="q" placeholder="Search..." class="flex-1 appearance-none shadow p-3 text-grey-dark mr-2 focus:outline-none">
+                                        </div>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
 
             <?php foreach($medias as $media){ ?>
 
@@ -138,6 +155,24 @@ foreach($medias as $media){
                 <div id="openseadragon1" style="width: 100%; height: 800px;"></div>
             </div>
             <?php echo $this->solrDragon($resource); ?>
+        </div>
+    </div>
+
+    <div class="flex bg-gray-200">
+        <div class="flex-1 text-gray-700 text-center bg-gray-400 px-4 py-2 m-2">
+            <?php echo $resource->displayValues(); ?>
+        </div>
+        <div class="flex-1 text-gray-700 text-center bg-gray-400 px-4 py-2 m-2">
+            <?php
+                $subjectValues = $resource->displaySubjectValues();
+            ?>
+            <?php if ($subjectValues): ?>
+                <div id="item-linked">
+                    <h3><?php echo $this->translate('Linked resources'); ?></h3>
+                    <?php echo $subjectValues; ?>
+                </div>
+            <?php endif; ?>
+            <?php $this->trigger('view.show.after'); ?>
         </div>
     </div>
 

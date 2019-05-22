@@ -2,10 +2,12 @@
 namespace SolrDragon;
 
 use Omeka\Stdlib\Cli;
+use SolrDragon\Controller\SearchController;
 use SolrDragon\Form\ConfigForm;
 use Omeka\Module\AbstractModule;
 use Zend\EventManager\Event;
 use Zend\EventManager\SharedEventManagerInterface;
+use Zend\Mvc\MvcEvent;
 use Zend\ServiceManager\Exception\ServiceNotFoundException;
 use Zend\View\Model\ViewModel;
 use Zend\Mvc\Controller\AbstractController;
@@ -143,6 +145,20 @@ class Module extends AbstractModule
         return $data;
     }
 
+    public function onBootstrap(MvcEvent $event)
+    {
+        parent::onBootstrap($event);
+
+        $acl = $this->getServiceLocator()->get('Omeka\Acl');
+        $acl->allow(
+            null,
+            [
+                'SolrDragon\Controller\Search'
+            ]
+        );
+
+        require __DIR__.'/vendor/autoload.php'; // Add autoloader for module-specific requirements
+    }
 
     public function attachListeners(SharedEventManagerInterface $sharedEventManager)
     {

@@ -10,7 +10,7 @@ class ViewerController extends AbstractActionController
     /**
      * Forward to the 'view' action
      *
-     * @see self::playAction()
+     * @see self::showAction()
      */
     public function indexAction()
     {
