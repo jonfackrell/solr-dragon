@@ -35,6 +35,7 @@ return [
         ],
         'factories' => [
             'SolrDragon\Controller\Index' => SolrDragon\Service\Controller\IndexControllerFactory::class,
+            'SolrDragon\Controller\Search' => SolrDragon\Service\Controller\SearchControllerFactory::class,
         ],
     ],
     'router' => [
@@ -71,6 +72,21 @@ return [
                     ],
                 ],
             ],
+            'solrdragon_api_search' => [
+                'type' => \Zend\Router\Http\Segment::class,
+                'options' => [
+                    'route' => '/solrdragon/search/:resource',
+                    'constraints' => [
+                        'resource' => '[a-zA-Z0-9_-]+',
+                    ],
+                    'defaults' => [
+                        '__NAMESPACE__' => 'SolrDragon\Controller',
+                        '__API__' => true,
+                        'controller' => 'Search',
+                        'action' => 'show',
+                    ],
+                ],
+            ],
             'site' => [
                 'child_routes' => [
                     'resource-id' => [
@@ -87,8 +103,8 @@ return [
                             ],
                         ],
                     ],
-                ]
-            ]
+                ],
+            ],
         ],
     ],
     'navigation' => [
