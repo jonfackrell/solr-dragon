@@ -12,7 +12,8 @@ class SearchControllerFactory implements FactoryInterface
         return new SearchController(
             $services,
             $services->get('Omeka\Paginator'),
-            $services->get('Omeka\ApiManager')
+            $services->get('Omeka\ApiManager'),
+            $services->get('Omeka\ApiAdapterManager')
         );
     }
 }

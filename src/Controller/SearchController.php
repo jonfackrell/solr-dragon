@@ -5,7 +5,9 @@ namespace SolrDragon\Controller;
 use Doctrine\ORM\Query;
 use Doctrine\ORM\QueryBuilder;
 use Interop\Container\ContainerInterface;
+use Omeka\Api\Adapter\Manager as AdapterManager;
 use Omeka\Api\Manager as ApiManager;
+use Omeka\Api\Request;
 use Omeka\Api\Response;
 use Omeka\Controller\ApiController;
 use Omeka\Stdlib\Paginator;
@@ -22,11 +24,12 @@ class SearchController extends ApiController
     /**
      * @param Paginator $paginator
      */
-    public function __construct(ContainerInterface $services, Paginator $paginator, ApiManager $api)
+    public function __construct(ContainerInterface $services, Paginator $paginator, ApiManager $api, AdapterManager $adapterManager)
     {
         $this->services = $services;
         $this->paginator = $paginator;
         $this->api = $api;
+        $this->adapterManager = $adapterManager;
     }
     /**
      * Forward to the 'view' action
@@ -60,7 +63,7 @@ class SearchController extends ApiController
 
         $qb->select(array('Omeka\Entity\Media'))
             ->from('Omeka\Entity\Media', 'Omeka\Entity\Media')
-            ->add('where', $qb->expr()->in('Omeka\Entity\Media.id', [9,7]));
+            ->add('where', $qb->expr()->in('Omeka\Entity\Media.id', [4,5]));
 
         // Before adding the ORDER BY clause, set a paginator responsible for
         // getting the total count. This optimization excludes the ORDER BY
@@ -82,9 +85,14 @@ class SearchController extends ApiController
             }
         }
 
-
+        $request = new Request(Request::SEARCH, 'media');
         $response = new Response($entities);
         $response->setTotalResults($countPaginator->count());
+
+        $response->setRequest($request);
+        $adapter = $this->adapterManager->get($request->getResource());
+        $this->api->finalize($adapter, $request, $response);
+
 
         //var_dump($medias);
         //die();
@@ -116,7 +124,8 @@ class SearchController extends ApiController
 
         $this->getResponse()->getHeaders()
             ->addHeaderLine('Link', implode(', ', $links));*/
-
+        /*var_dump($response);
+        die();*/
         return new ApiJsonModel($response, $this->getViewOptions());
     }
 }

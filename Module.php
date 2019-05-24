@@ -187,9 +187,9 @@ class Module extends AbstractModule
                         break;
                 }
 
-                $this->storeLocally($coordinates);
+                /*$this->storeLocally($coordinates);
                 if($solrIsEnabled)
-                    $this->storeSolr();
+                    $this->storeSolr();*/
 
             }
         );
