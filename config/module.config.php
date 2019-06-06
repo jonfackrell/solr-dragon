@@ -19,6 +19,7 @@ return [
     'service_manager' => [
         'factories' => [
             'SolrDragon\ExtractorManager' => SolrDragon\Service\Extractor\ManagerFactory::class,
+            'SolrDragon\Service\Solarium' => SolrDragon\Service\SolariumFactory::class,
         ],
     ],
     'extract_text_extractors' => [
@@ -36,6 +37,7 @@ return [
         'factories' => [
             'SolrDragon\Controller\Index' => SolrDragon\Service\Controller\IndexControllerFactory::class,
             'SolrDragon\Controller\Search' => SolrDragon\Service\Controller\SearchControllerFactory::class,
+            'SolrDragon\Controller\Label' => SolrDragon\Service\Controller\LabelControllerFactory::class,
         ],
     ],
     'router' => [
@@ -72,17 +74,33 @@ return [
                     ],
                 ],
             ],
-            'solrdragon_api_search' => [
+            'solrdragon_media_search' => [
                 'type' => \Zend\Router\Http\Segment::class,
                 'options' => [
-                    'route' => '/solrdragon/search/:resource',
+                    'route' => '/solrdragon/search/:resource/:id',
                     'constraints' => [
                         'resource' => '[a-zA-Z0-9_-]+',
+                        'id' => '\d+'
                     ],
                     'defaults' => [
                         '__NAMESPACE__' => 'SolrDragon\Controller',
                         '__API__' => true,
                         'controller' => 'Search',
+                        'action' => 'show',
+                    ],
+                ],
+            ],
+            'solrdragon_label_search' => [
+                'type' => \Zend\Router\Http\Segment::class,
+                'options' => [
+                    'route' => '/solrdragon/labels/:id',
+                    'constraints' => [
+                        'id' => '\d+'
+                    ],
+                    'defaults' => [
+                        '__NAMESPACE__' => 'SolrDragon\Controller',
+                        '__API__' => true,
+                        'controller' => 'Label',
                         'action' => 'show',
                     ],
                 ],
@@ -126,7 +144,7 @@ return [
     ],
     'solrdragon' => [
         'config' => [
-            'solrdragon_solr_server_url' => '',
+            'solrdragon_solr_server_ip' => '',
             'solrdragon_solr_server_username' => '',
             'solrdragon_solr_server_password' => '',
             'solrdragon_google_cloud_key' => '',

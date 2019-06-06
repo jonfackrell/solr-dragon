@@ -5,8 +5,10 @@ use Omeka\Stdlib\Cli;
 use SolrDragon\Controller\SearchController;
 use SolrDragon\Form\ConfigForm;
 use Omeka\Module\AbstractModule;
+use Spatie\PdfToImage\Pdf;
 use Zend\EventManager\Event;
 use Zend\EventManager\SharedEventManagerInterface;
+use Zend\Math\Rand;
 use Zend\Mvc\MvcEvent;
 use Zend\ServiceManager\Exception\ServiceNotFoundException;
 use Zend\View\Model\ViewModel;
@@ -153,7 +155,8 @@ class Module extends AbstractModule
         $acl->allow(
             null,
             [
-                'SolrDragon\Controller\Search'
+                'SolrDragon\Controller\Search',
+                'SolrDragon\Controller\Label',
             ]
         );
 
@@ -172,14 +175,30 @@ class Module extends AbstractModule
             function (Event $event) {
 
                 // Get module settings
+                $settings = $this->getServiceLocator()->get('Omeka\Settings');
+                $directory = $settings->get('file_sideload_directory');
 
+                // Access the uploaded file passed through with the event
+                $tempFile = $event->getParam('tempFile');
 
                 switch ('pdftotext') {
                     case 'pdftotext':
-                        $tempFile = $event->getParam('tempFile');
-                        $coordinates = $this->extractText($tempFile->getTempPath(), $tempFile->getMediaType());
-                        $logger = $this->getServiceLocator()->get('Omeka\Logger');
-                        $logger->info($coordinates);
+
+                        if($tempFile->getExtension() == 'pdf'){
+                            // Create a new item subdirectory in the sideload directory
+                            if (!is_dir($directory.DIRECTORY_SEPARATOR.$event->getTarget()->getItem()->getId())) {
+                                mkdir($directory.DIRECTORY_SEPARATOR.$event->getTarget()->getItem()->getId(), 0700);
+                            }
+                            // Convert the pdf into a png image and store it in the item subdirectory
+                            $pdf = new Pdf($tempFile->getTempPath());
+                            $pdf->setOutputFormat('png')
+                                ->saveImage($directory.DIRECTORY_SEPARATOR.$event->getTarget()->getItem()->getId().DIRECTORY_SEPARATOR.str_replace('.pdf', '.png',$tempFile->getSourceName()));
+
+                            // Extract OCR text coordinates
+                            $coordinates = $this->extractText($tempFile->getTempPath(), $tempFile->getMediaType());
+                            $logger = $this->getServiceLocator()->get('Omeka\Logger');
+                            $logger->info($coordinates);
+                        }
                         // Process XML
                         break;
                     case 'google':
@@ -190,6 +209,43 @@ class Module extends AbstractModule
                 /*$this->storeLocally($coordinates);
                 if($solrIsEnabled)
                     $this->storeSolr();*/
+
+            }
+        );
+
+        $sharedEventManager->attach(
+            '*',
+            'entity.update.post',
+            function (Event $event) {
+                die();
+                $settings = $this->getServiceLocator()->get('Omeka\Settings');
+                $directory = $settings->get('file_sideload_directory').DIRECTORY_SEPARATOR.$event->getTarget()->getId();
+                $api = $this->getServiceLocator()->get('Omeka\ApiManager');
+                // After the Item has been saved, we can now attach the the new png image as a new media object
+                if (is_dir($directory)) {
+                    $dir = new \SplFileInfo(realpath($directory));
+                    $iterator = new \DirectoryIterator($dir);
+                    foreach ($iterator as $file) {
+                        if ($this->verifyFile($directory, $file)) {
+                            // Create new Media object and store it
+                            $response = $api->create('media', [
+                                "o:ingester" => "sideload",
+                                "o:source" => $file->getFilename(),
+                                "ingest_filename" => $event->getTarget()->getId().DIRECTORY_SEPARATOR.$file->getFilename(),
+                                "o:item" => [
+                                    "o:id" => $event->getTarget()->getId()
+                                ]
+                            ], []
+                            );
+
+                            $media = $response->getContent();
+                        }
+                    }
+
+                    // Delete the temporary item subdirectory from the sideload directory
+                    rmdir($directory);
+
+                }
 
             }
         );
@@ -227,6 +283,36 @@ class Module extends AbstractModule
         }
         // extract() should return false if it cannot extract text.
         return $extractor->extract($filePath, $options);
+    }
+
+    /**
+     * Verify the passed file.
+     *
+     * Working off the "real" base directory and "real" filepath: both must
+     * exist and have sufficient permissions; the filepath must begin with the
+     * base directory path to avoid problems with symlinks; the base directory
+     * must be server-writable to delete the file; and the file must be a
+     * readable regular file.
+     *
+     * @param \SplFileInfo $fileinfo
+     * @return string|false The real file path or false if the file is invalid
+     */
+    public function verifyFile($directory, \SplFileInfo $fileinfo)
+    {
+        if (false === $directory) {
+            return false;
+        }
+        $realPath = $fileinfo->getRealPath();
+        if (false === $realPath) {
+            return false;
+        }
+        if (0 !== strpos($realPath, $directory)) {
+            return false;
+        }
+        if (!$fileinfo->isFile() || !$fileinfo->isReadable()) {
+            return false;
+        }
+        return $realPath;
     }
 
 
