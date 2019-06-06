@@ -28,41 +28,93 @@ foreach($medias as $media){
                     ],
                 ];
 }
+$q = $this->params()->fromQuery();
 ?>
 <script>
+    var images = [];
     $(function(){
-        var viewer = OpenSeadragon({
-            id: "openseadragon1",
-            prefixUrl: "/modules/SolrDragon/asset/vendor/solrdragon/images/",
-            toolbar: "toolbar-container",
-            tileSources: <?php echo json_encode($images); ?>,
-            nextButton:     "next",
-            previousButton: "previous",
-            showNavigator:  true,
-            sequenceMode: true,
-            degrees:       90,
-            showRotationControl: true,
-            showFlipControl: true,
-            showReferenceStrip: true,
-            gestureSettingsTouch: {
-                pinchRotate: true
+
+        $.ajax({
+            url : "/solrdragon/search/item/<?php echo $resource->id(); ?>?search=<?php echo $q['search']; ?>",
+            type : "GET",
+            dataType: 'json',
+            success: function(data){
+                count = data.length;
+                $.each(data, function(i, el){
+                    images.push({
+                        'type': 'legacy-image-pyramid',
+                        'levels': [
+                            {
+                                'url': el['o:original_url'],
+                                'height': 2000,
+                                'width': 2000
+                            }
+                        ]
+                    });
+
+                    $('#media-list').append([
+                        '<div>',
+                        el['o:source'],
+                        '</div>',
+                    ].join("\n"));
+
+                    if (!--count){
+                        var viewer = OpenSeadragon({
+                            id: "openseadragon1",
+                            prefixUrl: "/modules/SolrDragon/asset/vendor/solrdragon/images/",
+                            toolbar: "toolbar-container",
+                            tileSources: images,
+                            nextButton:     "next",
+                            previousButton: "previous",
+                            showNavigator:  true,
+                            sequenceMode: true,
+                            degrees:       90,
+                            showRotationControl: true,
+                            showFlipControl: true,
+                            showReferenceStrip: true,
+                            gestureSettingsTouch: {
+                                pinchRotate: true
+                            }
+                        });
+
+                        let printButton = new OpenSeadragon.Button({
+                            tooltip: 'Print',
+                            srcRest: `/modules/SolrDragon/asset/vendor/solrdragon/images/button_grouphover.png`,
+                            srcGroup: `/modules/SolrDragon/asset/vendor/solrdragon/images/button_grouphover.png`,
+                            srcHover: `/modules/SolrDragon/asset/vendor/solrdragon/images/button_grouphover.png`,
+                            srcDown: `/modules/SolrDragon/asset/vendor/solrdragon/images/button_grouphover.png`,
+                            onClick: function(data){
+                                console.log(data);
+                                window.print();
+                            }
+                        });
+
+                        viewer.buttons.buttons.push(printButton);
+                        viewer.buttons.element.appendChild(printButton.element);
+
+                        viewer.addHandler("previous", function (data) {
+                            console.log(data);
+                        });
+
+                        viewer.addHandler("next", function (data) {
+                            console.log(data);
+                        });
+
+                        $(document).on('click', '.media', function(){
+                            var $media = $(this);
+                            viewer.open({
+                                type: 'image',
+                                url: $media.data('image')
+                            });
+                        });
+                    }
+
+                });
+
             }
         });
 
-        let printButton = new OpenSeadragon.Button({
-            tooltip: 'Print',
-            srcRest: `/modules/SolrDragon/asset/vendor/solrdragon/images/button_grouphover.png`,
-            srcGroup: `/modules/SolrDragon/asset/vendor/solrdragon/images/button_grouphover.png`,
-            srcHover: `/modules/SolrDragon/asset/vendor/solrdragon/images/button_grouphover.png`,
-            srcDown: `/modules/SolrDragon/asset/vendor/solrdragon/images/button_grouphover.png`,
-            onClick: function(data){
-                console.log(data);
-                window.print();
-            }
-        });
 
-        viewer.buttons.buttons.push(printButton);
-        viewer.buttons.element.appendChild(printButton.element);
 
 
 
@@ -85,21 +137,7 @@ foreach($medias as $media){
         });*/
 
 
-        viewer.addHandler("previous", function (data) {
-            console.log(data);
-        });
-
-        viewer.addHandler("next", function (data) {
-            console.log(data);
-        });
-
-        $(document).on('click', '.media', function(){
-            var $media = $(this);
-            viewer.open({
-                type: 'image',
-                url: $media.data('image')
-            });
-        });
+        /**/
     });
 </script>
 
@@ -127,22 +165,25 @@ foreach($medias as $media){
                 </div>
             </div>
 
-            <?php foreach($medias as $media){ ?>
+            <div id="media-list">
 
-                <div class="media max-w-sm w-full lg:flex" data-image="<?php echo $media->originalUrl(); ?>">
+            </div>
+            <?php /*foreach($medias as $media){ */?><!--
+
+                <div class="media max-w-sm w-full lg:flex" data-image="<?php /*echo $media->originalUrl(); */?>">
                     <div class="h-32 lg:h-auto lg:w-32 flex-none bg-cover rounded-t lg:rounded-t-none lg:rounded-l text-center overflow-hidden"
-                         style="background-image: url('<?php echo $media->thumbnailUrl('medium'); ?>')"
+                         style="background-image: url('<?php /*echo $media->thumbnailUrl('medium'); */?>')"
                          title="...">
                     </div>
                     <div class="border-r border-b border-l border-grey-light lg:border-l-0 lg:border-t lg:border-grey-light bg-white rounded-b lg:rounded-b-none lg:rounded-r p-4 flex flex-col justify-between leading-normal">
                         <div class="mb-8">
-                            <div class="media-title text-black font-bold text-xl mb-2"><?php echo $media->displayTitle(); ?></div>
-                            <p class="text-grey-darker text-base"><?php echo $media->displayValues(); ?></p>
+                            <div class="media-title text-black font-bold text-xl mb-2"><?php /*echo $media->displayTitle(); */?></div>
+                            <p class="text-grey-darker text-base"><?php /*echo $media->displayValues(); */?></p>
                         </div>
                     </div>
                 </div>
 
-            <?php } ?>
+            --><?php /*} */?>
         </div>
         <div class="flex-1">
             <div id="toolbar-container" style="width: 100%; height: 40px;">

@@ -4,5 +4,7 @@
         "solarium/solarium": "^5.0"
     },
     "license": "MIT",
-    "require": {}
+    "require": {
+        "spatie/pdf-to-image": "^1.8"
+    }
 }

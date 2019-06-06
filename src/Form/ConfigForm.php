@@ -26,14 +26,14 @@ class ConfigForm extends Form implements TranslatorAwareInterface
         $imageFieldset = $this->get('solrdragon_solr_server');
 
         $this->add([
-            'name' => 'solrdragon_solr_server_url',
+            'name' => 'solrdragon_solr_server_ip',
             'type' => Element\Text::class,
             'options' => [
                 'label' => 'Solr Server URL', // @translate
                 'info' => $this->translate('This should be the full URL to your Solr Server instance.'), // @translate
             ],
             'attributes' => [
-                'id' => 'solrdragon_solr_server_url',
+                'id' => 'solrdragon_solr_server_ip',
             ],
         ]);
 
