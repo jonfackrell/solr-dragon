@@ -156,8 +156,15 @@ class SolrDragon extends AbstractHelper
 
         $view = $this->view;
 
+       /* $view->headLink()
+            ->prependStylesheet($view->assetUrl('css/tailwind.min.css', 'SolrDragon'));*/
+
         $view->headLink()
-            ->prependStylesheet($view->assetUrl('css/tailwind.min.css', 'SolrDragon'));
+            ->prependStylesheet('https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css');
+        $view->headScript()
+            ->appendFile('https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js');
+        $view->headScript()
+            ->appendFile('https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js');
 
         $view->headLink()
             ->prependStylesheet($view->assetUrl('css/solrdragon.css', 'SolrDragon'));
@@ -167,7 +174,7 @@ class SolrDragon extends AbstractHelper
         $view->headLink()
             ->prependStylesheet($view->assetUrl('vendor/zino-ui/themes/silver/zino.splitter.css', 'SolrDragon'));
         $view->headScript()
-            ->prependFile($view->assetUrl('vendor/zino-ui/zino-1.5.custom.min.js', 'SolrDragon'));
+            ->appendFile($view->assetUrl('vendor/zino-ui/zino-1.5.custom.min.js', 'SolrDragon'));
 
         $view->headLink()
             ->prependStylesheet($view->assetUrl('vendor/uv/uv.css', 'UniversalViewer'))

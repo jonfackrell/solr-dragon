@@ -62,6 +62,36 @@ class ConfigForm extends Form implements TranslatorAwareInterface
         ]);
 
         $this->add([
+            'name'    => 'solrdragon_extractor',
+            'type'    => Fieldset::class,
+            'options' => [
+                'label' => 'SolrDragon Text Extractor',
+            ],
+            'attributes' => [
+                'id' => 'solrdragon-extractor-fieldset',
+            ],
+        ]);
+
+        $adapterFieldset = $this->get('solrdragon_extractor');
+
+        $this->add([
+            'name'    => 'solrdragon_text_extractor',
+            'type'    => Element\Select::class,
+            'options' => [
+                'label'         => 'Text Extractor: ',
+                'value_options' => [
+                    'none'              => 'Do not extract text',
+                    'pdftotext'         => 'PDF to Text',
+                    'googlevision'      => 'Google Vision API',
+                    'microsoftvision'   => 'Microsoft Computer Vision API',
+                ],
+            ],
+            'attributes' => [
+                'id' => 'solrdragon-text-extractor',
+            ],
+        ]);
+
+        $this->add([
             'name' => 'solrdragon_google_vision',
             'type' => Fieldset::class,
             'options' => [

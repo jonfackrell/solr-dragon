@@ -29,7 +29,7 @@ class Pdftotext implements ExtractorInterface
         if (false === $commandPath) {
             return false;
         }
-        $commandArgs = [$commandPath, '-layout', '-enc UTF-8'];
+        $commandArgs = [$commandPath, '-bbox', '-enc UTF-8'];
         if (isset($options['f'])) {
             $commandArgs[] = sprintf('-f %s', escapeshellarg($options['f']));
         }
@@ -39,6 +39,30 @@ class Pdftotext implements ExtractorInterface
         $commandArgs[] = escapeshellarg($filePath);
         $commandArgs[] = '-';
         $command = implode(' ', $commandArgs);
-        return $this->cli->execute($command);
+        file_put_contents('/home/vagrant/code/omeka/sideload/item.xml', $this->cli->execute($command));
+
+        return $this->format($this->cli->execute($command));
+    }
+
+    private function format($text)
+    {
+        $ob = simplexml_load_string($text);
+
+        $array = [];
+        foreach($ob->body->doc->page as $key => $page){
+            $temp = [];
+            //$temp['page'] = $page->attributes;
+            foreach($page->word as $word){
+                $temp['words'][] = [
+                    'text' => (string)$word,
+                    'x' => floatval((string)$word->attributes()['xMin'])*2,
+                    'y' => floatval((string)$word->attributes()['yMin'])*2,
+                    'width' => (floatval((string)$word->attributes()['xMax']) - floatval((string)$word->attributes()['xMin']))*2,
+                    'height' => (floatval((string)$word->attributes()['yMax']) -floatval((string)$word->attributes()['yMin']))*2
+                ];
+            }
+            $array[] = $temp;
+        }
+        return $array;
     }
 }

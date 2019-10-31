@@ -25,6 +25,8 @@ return [
     'extract_text_extractors' => [
         'factories' => [
             'pdftotext' => SolrDragon\Service\Extractor\PdftotextFactory::class,
+            'googlevision' => SolrDragon\Service\Extractor\GoogleVisionFactory::class,
+            'microsoftvision' => SolrDragon\Service\Extractor\MicrosoftVisionFactory::class,
         ],
         'aliases' => [
             'application/pdf' => 'pdftotext',
@@ -36,12 +38,46 @@ return [
         ],
         'factories' => [
             'SolrDragon\Controller\Index' => SolrDragon\Service\Controller\IndexControllerFactory::class,
+            'SolrDragon\Controller\Item' => SolrDragon\Service\Controller\ItemControllerFactory::class,
             'SolrDragon\Controller\Search' => SolrDragon\Service\Controller\SearchControllerFactory::class,
             'SolrDragon\Controller\Label' => SolrDragon\Service\Controller\LabelControllerFactory::class,
         ],
     ],
     'router' => [
         'routes' => [
+            'site' => [
+                'child_routes' => [
+                    'resource' => [
+                        'type' => \Zend\Router\Http\Segment::class,
+                        'options' => [
+                            'route' => '/:controller[/:action]',
+                            'defaults' => [
+                                '__NAMESPACE__' => 'SolrDragon\Controller',
+                                'controller' => 'Item',
+                                'action' => 'browse',
+                            ],
+                            'constraints' => [
+                                'controller' => '[a-zA-Z][a-zA-Z0-9_-]*',
+                                'action' => '[a-zA-Z][a-zA-Z0-9_-]*',
+                            ],
+                        ],
+                    ],
+                    'resource-id' => [
+                        'type' => \Zend\Router\Http\Segment::class,
+                        'options' => [
+                            'route' => '/:controller/:id[/:action]/solrdragon',
+                            'defaults' => [
+                                'action' => 'show',
+                            ],
+                            'constraints' => [
+                                'controller' => '[a-zA-Z][a-zA-Z0-9_-]*',
+                                'action' => '[a-zA-Z][a-zA-Z0-9_-]*',
+                                'id' => '\d+',
+                            ],
+                        ],
+                    ],
+                ],
+            ],
             'admin' => [
                 'child_routes' => [
                     'solrdragon' => [
@@ -105,24 +141,6 @@ return [
                     ],
                 ],
             ],
-            'site' => [
-                'child_routes' => [
-                    'resource-id' => [
-                        'type' => \Zend\Router\Http\Segment::class,
-                        'options' => [
-                            'route' => '/:controller/:id[/:action]/solrdragon',
-                            'defaults' => [
-                                'action' => 'show',
-                            ],
-                            'constraints' => [
-                                'controller' => '[a-zA-Z][a-zA-Z0-9_-]*',
-                                'action' => '[a-zA-Z][a-zA-Z0-9_-]*',
-                                'id' => '\d+',
-                            ],
-                        ],
-                    ],
-                ],
-            ],
         ],
     ],
     'navigation' => [
@@ -142,11 +160,17 @@ return [
             ],
         ],
     ],
+    'search_adapters' => [
+        'factories' => [
+            'solrdragon' => 'SolrDragon\Service\AdapterFactory',
+        ],
+    ],
     'solrdragon' => [
         'config' => [
             'solrdragon_solr_server_ip' => '',
             'solrdragon_solr_server_username' => '',
             'solrdragon_solr_server_password' => '',
+            'solrdragon_text_extractor' => '',
             'solrdragon_google_cloud_key' => '',
         ],
     ],
