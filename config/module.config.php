@@ -62,6 +62,21 @@ return [
                             ],
                         ],
                     ],
+                    'resource' => [
+                        'type' => \Zend\Router\Http\Segment::class,
+                        'options' => [
+                            'route' => '/index/search',
+                            'defaults' => [
+                                '__NAMESPACE__' => 'SolrDragon\Controller',
+                                'controller' => 'Item',
+                                'action' => 'browse',
+                            ],
+                            'constraints' => [
+                                'controller' => '[a-zA-Z][a-zA-Z0-9_-]*',
+                                'action' => '[a-zA-Z][a-zA-Z0-9_-]*',
+                            ],
+                        ],
+                    ],
                     'resource-id' => [
                         'type' => \Zend\Router\Http\Segment::class,
                         'options' => [

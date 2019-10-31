@@ -74,14 +74,16 @@ class SearchController extends ApiController
 
         //$conn = $this->services->get('Omeka\Connection');
         $qb = $this->services->get('Omeka\EntityManager')->createQueryBuilder();
-/*
-        $qb->select(array('Omeka\Entity\Media'))
-            ->from('Omeka\Entity\Media', 'Omeka\Entity\Media')
-            ->add('where', $qb->expr()->in('Omeka\Entity\Media.id', $media));*/
 
-        $qb->select(array('Omeka\Entity\Media'))
-            ->from('Omeka\Entity\Media', 'Omeka\Entity\Media')
-            ->add('where', $qb->expr()->in('Omeka\Entity\Media.id', $media));
+        $qb->select('m')
+            ->from('Omeka\Entity\Media', 'm')
+            ->add('where', $qb->expr()->in('m.id', $media));
+
+        /*$qb->select(array('Omeka\Entity\Media'))
+            ->from('media', 'media')
+            ->add('where', $qb->expr()->in('media.id', $media));*/
+
+        //dd($qb);
 
         // Before adding the ORDER BY clause, set a paginator responsible for
         // getting the total count. This optimization excludes the ORDER BY

@@ -130,9 +130,9 @@ class ItemController extends \Omeka\Controller\Site\ItemController
         //$conn = $this->services->get('Omeka\Connection');
         $qb = $this->services->get('Omeka\EntityManager')->createQueryBuilder();
 
-        $qb->select(array('Omeka\Entity\Item'))
-            ->from('Omeka\Entity\Item', 'Omeka\Entity\Item')
-            ->add('where', $qb->expr()->in('Omeka\Entity\Item.id', $items));
+        $qb->select('i')
+            ->from('Omeka\Entity\Item', 'i')
+            ->add('where', $qb->expr()->in('i.id', $items));
 
         // Before adding the ORDER BY clause, set a paginator responsible for
         // getting the total count. This optimization excludes the ORDER BY
