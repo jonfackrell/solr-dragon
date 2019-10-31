@@ -5,6 +5,7 @@ namespace SolrDragon\Controller;
 use Doctrine\ORM\Query;
 use Doctrine\ORM\QueryBuilder;
 use Interop\Container\ContainerInterface;
+use Intervention\Image\ImageManagerStatic as Image;
 use Omeka\Api\Adapter\Manager as AdapterManager;
 use Omeka\Api\Manager as ApiManager;
 use Omeka\Api\Request;
@@ -60,7 +61,7 @@ class SearchController extends ApiController
         $media = [];
         foreach ($resultset as $document) {
             $fields = $document->getFields();
-            $media[] = $fields['media_id'];
+            $media[] = $fields['id'];
         }
 
         if(empty($media)){
@@ -73,6 +74,10 @@ class SearchController extends ApiController
 
         //$conn = $this->services->get('Omeka\Connection');
         $qb = $this->services->get('Omeka\EntityManager')->createQueryBuilder();
+/*
+        $qb->select(array('Omeka\Entity\Media'))
+            ->from('Omeka\Entity\Media', 'Omeka\Entity\Media')
+            ->add('where', $qb->expr()->in('Omeka\Entity\Media.id', $media));*/
 
         $qb->select(array('Omeka\Entity\Media'))
             ->from('Omeka\Entity\Media', 'Omeka\Entity\Media')
@@ -84,6 +89,7 @@ class SearchController extends ApiController
         $countPaginator = new DoctrinePaginator($qb, false);
         $paginator = new DoctrinePaginator($qb, false);
 
+        $adapter = $this->adapterManager->get('media');
         $entities = [];
         // Don't make the request if the LIMIT is set to zero. Useful if the
         // only information needed is total results.
@@ -94,6 +100,9 @@ class SearchController extends ApiController
                     // "AS HIDDEN {alias}" to avoid this condition.
                     $entity = $entity[0];
                 }
+                $temp = $adapter->getRepresentation($entity);
+                $image = Image::make(OMEKA_PATH . DIRECTORY_SEPARATOR . 'files' . DIRECTORY_SEPARATOR . 'original' . DIRECTORY_SEPARATOR . $temp->filename());
+                $entity->setData(['width' => $image->width(), 'height' => $image->height()]);
                 $entities[] = $entity;
             }
         }

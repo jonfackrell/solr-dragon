@@ -49,8 +49,13 @@ class LabelController extends ApiController
         $id = $this->params()->fromRoute('id');
         $q = $this->params()->fromQuery();
         $term = $q['search'];
+        $term = explode(' ', $term);
         $query->createFilterQuery('media')->setQuery("media_id:$id");
-        $query->setQuery("attr_text:$term");
+        if(count($term) > 0){
+            $query->setQuery("attr_text:" . implode(' OR attr_text:', $term));
+        }else{
+            $query->setQuery("attr_text:" . $term[0]);
+        }
         // this executes the query and returns the result
         $resultset = $client->execute($query);
         // get word coordinates
@@ -58,11 +63,13 @@ class LabelController extends ApiController
         foreach ($resultset as $document) {
             $fields = $document->getFields();
             $media[] = [
+                'id' => $fields['id'],
                 'media_id' => $fields['media_id'],
-                /*'x' => $fields['x'],
+                'text' => $fields['attr_text'],
+                'x' => $fields['x'],
                 'y' => $fields['y'],
                 'height' => $fields['height'],
-                'width' => $fields['width'],*/
+                'width' => $fields['width'],
             ];
         }
 

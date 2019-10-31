@@ -4,6 +4,8 @@
  * @var \Omeka\Api\Representation\AbstractResourceEntityRepresentation $resource
  */
 
+$searchValue = $this->escapeHtml($this->params()->fromQuery('search', ''));
+
 $this->htmlElement('body')->appendAttribute('class', 'universal-viewer play');
 $title = $resource->displayTitle();
 $creator = $resource->value('dcterms:creator', ['type' => 'literal']);
@@ -28,38 +30,68 @@ foreach($medias as $media){
                     ],
                 ];
 }
-$q = $this->params()->fromQuery();
+//$q = $this->params()->fromQuery();
 ?>
+<style>
+    .highlight{
+        background-color: rgba(255, 0, 0, .3);
+    }
+    .active{
+        background-color: rgba(0, 255, 0, .3);
+    }
+</style>
 <script>
+    var viewer = null;
     var images = [];
     $(function(){
+        var $mediaList = $('#media-list');
+
+        /*$("#splitter").zinoSplitter({
+            panes: [
+                {size: 260},
+                {size: 260, region: "east"}
+            ]
+        });*/
 
         $.ajax({
-            url : "/solrdragon/search/item/<?php echo $resource->id(); ?>?search=<?php echo $q['search']; ?>",
+            url : "/solrdragon/search/item/<?php echo $resource->id(); ?><?php if(strlen($searchValue) > 0){ echo '?search=' . $searchValue; } ?>",
             type : "GET",
             dataType: 'json',
             success: function(data){
                 count = data.length;
                 $.each(data, function(i, el){
+                    //console.log(el);
                     images.push({
                         'type': 'legacy-image-pyramid',
                         'levels': [
                             {
+                                'id': el['o:id'],
                                 'url': el['o:original_url'],
-                                'height': 2000,
-                                'width': 2000
+                                'height': el['data']['height'],
+                                'width': el['data']['width']
                             }
                         ]
                     });
 
-                    $('#media-list').append([
-                        '<div>',
-                        el['o:source'],
+                    $mediaList.append([
+                        '<div class="card mb-3" style="max-width: 540px;" data-id="' + el['o:id'] + '" data-image="' + el['o:original_url'] + '">',
+                        '   <div class="row no-gutters">',
+                        '       <div class="col-md-4">',
+                        '           <img src="' + el['o:thumbnail_urls']['medium'] + '" class="card-img" alt="">',
+                        '       </div>',
+                        '       <div class="col-md-8">',
+                        '           <div class="card-body">',
+                        '               <h5 class="card-title">' + el['o:source'] + '</h5>',
+                        '               <p class="card-text"></p>',
+                        '               <p class="card-text"><small class="text-muted"></small></p>',
+                        '           </div>',
+                        '       </div>',
+                        '   </div>',
                         '</div>',
                     ].join("\n"));
 
                     if (!--count){
-                        var viewer = OpenSeadragon({
+                        viewer = OpenSeadragon({
                             id: "openseadragon1",
                             prefixUrl: "/modules/SolrDragon/asset/vendor/solrdragon/images/",
                             toolbar: "toolbar-container",
@@ -68,7 +100,7 @@ $q = $this->params()->fromQuery();
                             previousButton: "previous",
                             showNavigator:  true,
                             sequenceMode: true,
-                            degrees:       90,
+                            degrees:       0,
                             showRotationControl: true,
                             showFlipControl: true,
                             showReferenceStrip: true,
@@ -100,13 +132,47 @@ $q = $this->params()->fromQuery();
                             console.log(data);
                         });
 
-                        $(document).on('click', '.media', function(){
+                        $(document).on('click', '.card', function(){
                             var $media = $(this);
                             viewer.open({
+                                id: $media.data('id'),
                                 type: 'image',
                                 url: $media.data('image')
                             });
                         });
+
+
+
+                        viewer.addHandler('open', (event) => {
+                            var id = (event.source.hasOwnProperty('levels'))?event.source.levels[0].id:event.source.id;
+                            $mediaList.find('.card').each(function(i, val){
+                                var $card = $(this);
+                                $card.removeClass('active');
+                            });
+                            $mediaList.find('.card[data-id="' + id + '"]').addClass('active');
+                            $.ajax({
+                                url : "/solrdragon/labels/" + id + "?search=" + $('input[name="q"]').val(),
+                                type : "GET",
+                                dataType: 'json',
+                                success: function(data){
+                                    // TODO: Index should match selected item
+                                    var tiledImage = viewer.world.getItemAt(0);
+                                    $.each(data, function(i, el){
+                                        var rect = new OpenSeadragon.Rect(el['x'], el['y'], el['width'], el['height']);
+                                        rect = tiledImage.imageToViewportRectangle(rect);
+                                        var overlay = {};
+                                        overlay.x = rect.x;
+                                        overlay.y = rect.y;
+                                        overlay.width = rect.width;
+                                        overlay.height = rect.height;
+                                        overlay.className = 'highlight';
+                                        viewer.addOverlay(overlay);
+                                    });
+                                }
+                            });
+                        });
+
+
                     }
 
                 });
@@ -114,27 +180,57 @@ $q = $this->params()->fromQuery();
             }
         });
 
+        $(document).on('submit', '#search-media', function(e){
+            e.preventDefault();
+            $mediaList.html('');
+            images = [];
+            $.ajax({
+                url: "/solrdragon/search/item/" + "<?php echo $resource->id(); ?>",
+                type: "GET",
+                data: {'search': $('input[name="q"]').val()},
+                dataType: 'json',
+                success: function(data){
+                    $.each(data, function(i, el){
 
+                        images.push({
+                            'type': 'legacy-image-pyramid',
+                            'levels': [
+                                {
+                                    'id': el['o:id'],
+                                    'url': el['o:original_url'],
+                                    'height': el['data']['height'],
+                                    'width': el['data']['width']
+                                }
+                            ]
+                        });
 
+                        viewer.open(images);
 
-
-        /*viewer.addHandler('open', () => {
-            let printButton = new OpenSeadragon.Button({
-                tooltip: 'Print',
-                srcRest: `/modules/SolrDragon/asset/vendor/solrdragon/images/button_grouphover.png`,
-                srcGroup: `/modules/SolrDragon/asset/vendor/solrdragon/images/button_grouphover.png`,
-                srcHover: `/modules/SolrDragon/asset/vendor/solrdragon/images/button_grouphover.png`,
-                srcDown: `/modules/SolrDragon/asset/vendor/solrdragon/images/button_grouphover.png`,
-                onClick: function(data){
-                    console.log(data);
-                    window.print();
+                        $mediaList.append([
+                            '<div class="card mb-3" style="max-width: 540px;" data-id="' + el['o:id'] + '" data-image="' + el['o:original_url'] + '">',
+                            '   <div class="row no-gutters">',
+                            '       <div class="col-md-4">',
+                            '           <img src="' + el['o:thumbnail_urls']['medium'] + '" class="card-img" alt="">',
+                            '       </div>',
+                            '       <div class="col-md-8">',
+                            '           <div class="card-body">',
+                            '               <h5 class="card-title">' + el['o:source'] + '</h5>',
+                            '               <p class="card-text"></p>',
+                            '               <p class="card-text"><small class="text-muted"></small></p>',
+                            '           </div>',
+                            '       </div>',
+                            '   </div>',
+                            '</div>',
+                        ].join("\n"));
+                    });
                 }
             });
 
-            viewer.buttons.buttons.push(printButton);
-            viewer.buttons.element.appendChild(printButton.element);
-            //viewer.addControl(printButton.element, { anchor: OpenSeadragon.ControlAnchor.TOP_LEFT });
-        });*/
+        });
+
+
+
+
 
 
         /**/
@@ -143,6 +239,38 @@ $q = $this->params()->fromQuery();
 
 
 <?php echo $this->pageTitle($title); ?>
+
+<div class="container-fluid">
+
+    <div id="splitter" class="row">
+
+        <div class="col-md-3">
+            <form id="search-media" action="#">
+                <div class="form-group">
+                    <input type="text" name="q" placeholder="Search..." value="<?php echo $searchValue; ?>" class="form-control">
+                </div>
+            </form>
+
+            <div id="media-list">
+            </div>
+        </div>
+
+        <div class="col-md-9">
+            <div id="toolbar-container" style="width: 100%; height: 40px;">
+                <div class="navigation-buttons">
+                    <span id="previous">Previous</span>
+                    <span id="next">Next</span>
+                </div>
+            </div>
+            <div>
+                <div id="openseadragon1" style="width: 100%; height: 800px;"></div>
+            </div>
+            <?php echo $this->solrDragon($resource); ?>
+        </div>
+
+    </div>
+
+</div>
 
     <div class="min-h-screen md:flex">
         <div class="flex-none w-full md:max-w-md overflow-y-scroll">
@@ -153,11 +281,7 @@ $q = $this->params()->fromQuery();
                         <div class="px-2 py-2">
                             <div class="text-center">
                                 <div class="w-full text-center">
-                                    <form action="#">
-                                        <div class="mx-auto p-1 pr-0 flex items-center">
-                                            <input type="q" placeholder="Search..." class="flex-1 appearance-none shadow p-3 text-grey-dark mr-2 focus:outline-none">
-                                        </div>
-                                    </form>
+
                                 </div>
                             </div>
                         </div>
@@ -165,7 +289,7 @@ $q = $this->params()->fromQuery();
                 </div>
             </div>
 
-            <div id="media-list">
+
 
             </div>
             <?php /*foreach($medias as $media){ */?><!--
@@ -186,16 +310,7 @@ $q = $this->params()->fromQuery();
             --><?php /*} */?>
         </div>
         <div class="flex-1">
-            <div id="toolbar-container" style="width: 100%; height: 40px;">
-                <div class="navigation-buttons">
-                    <span id="previous">Previous</span>
-                    <span id="next">Next</span>
-                </div>
-            </div>
-            <div>
-                <div id="openseadragon1" style="width: 100%; height: 800px;"></div>
-            </div>
-            <?php echo $this->solrDragon($resource); ?>
+
         </div>
     </div>
 
